@@ -1,4 +1,4 @@
-# paashup/keycloak
+# saashup/keycloak
 
 Custom Keycloak image for Paashups, preconfigured with realms, clients and theme.
 
