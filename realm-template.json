@@ -1,0 +1,76 @@
+{
+  "realm": "${KEYCLOAK_REALM}",
+  "enabled": true,
+  "displayName": "${KEYCLOAK_APP_NAME}",
+  "displayNameHtml": "${DISPLAY_NAME_HTML}",
+  "loginTheme": "paashup",
+  "adminTheme": "paashup",
+  "groups": [
+    { "name": "${KEYCLOAK_ADMIN_GROUP}" }
+  ],
+  "users": [
+    {
+      "username": "${KEYCLOAK_SEED_USERNAME}",
+      "email": "${KEYCLOAK_SEED_EMAIL}",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "${KEYCLOAK_SEED_USERNAME}",
+      "lastName": "SaaShup",
+      "credentials": [
+        { "type": "password", "value": "${KEYCLOAK_SEED_PASSWORD}", "temporary": false }
+      ],
+      "groups": [ "/${KEYCLOAK_ADMIN_GROUP}" ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "${GRAFANA_OIDC_CLIENT_ID}",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "secret": "${GRAFANA_OIDC_CLIENT_SECRET}",
+      "redirectUris": [ "${GRAFANA_OIDC_REDIRECT_URI}" ],
+      "webOrigins": [ "${WEB_ORIGIN}" ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "${SAASHUP_OIDC_CLIENT_ID}",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "secret": "${SAASHUP_OIDC_CLIENT_SECRET}",
+      "redirectUris": [ "${SAASHUP_OIDC_REDIRECT_URI}" ],
+      "webOrigins": [ "${WEB_ORIGIN}" ],
+      "protocolMappers": [
+        {
+          "name": "saashup-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "${SAASHUP_OIDC_CLIENT_ID}",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "identityProviders": ${IDENTITY_PROVIDERS_JSON}
+}

@@ -1,0 +1,7 @@
+:root {
+  --pf-v5-global--primary-color--100: ${THEME_PRIMARY_COLOR};
+  --keycloak-card-top-color: ${THEME_PRIMARY_COLOR};
+  --keycloak-bg-logo-url: url('${THEME_BACKGROUND_URL}');
+}
+
+${LOGO_CSS_RULE}
