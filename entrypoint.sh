@@ -28,6 +28,7 @@ IMPORT_DIR="/opt/keycloak/data/import"
 : "${KEYCLOAK_APP_NAME:=SaaShup}"
 : "${KEYCLOAK_LOGO_URL:=../img/saashup-logo.svg}"
 : "${THEME_PRIMARY_COLOR:=#0d6efd}"
+: "${THEME_SECONDARY_COLOR:=color-mix(in srgb, ${THEME_PRIMARY_COLOR} 75%, black)}"
 : "${THEME_BACKGROUND_URL:=../img/keycloak-bg-darken.svg}"
 : "${THEME_LOGO_WIDTH:=220px}"
 : "${THEME_LOGO_HEIGHT:=80px}"
@@ -141,6 +142,7 @@ sed \
 BRAND_CSS="/opt/keycloak/paashup/brand.css"
 sed \
   -e "s|\${THEME_PRIMARY_COLOR}|$(sed_escape "$THEME_PRIMARY_COLOR")|g" \
+  -e "s|\${THEME_SECONDARY_COLOR}|$(sed_escape "$THEME_SECONDARY_COLOR")|g" \
   -e "s|\${THEME_BACKGROUND_URL}|$(sed_escape "$THEME_BACKGROUND_URL")|g" \
   -e "s|\${LOGO_CSS_RULE}|$(sed_escape "$LOGO_CSS_RULE")|g" \
   /opt/keycloak/paashup/brand-template.css > "$BRAND_CSS"

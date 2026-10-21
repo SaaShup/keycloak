@@ -60,6 +60,7 @@ Used to render the realm import (all optional, sensible defaults shown):
 | `KEYCLOAK_APP_NAME` | `SaaShup` |
 | `KEYCLOAK_LOGO_URL` | `../img/saashup-logo.svg` (baked-in SaaShup logo) |
 | `THEME_PRIMARY_COLOR` | `#0d6efd` |
+| `THEME_SECONDARY_COLOR` | `color-mix(in srgb, $THEME_PRIMARY_COLOR 75%, black)` (primary, 25% darker) |
 | `THEME_BACKGROUND_URL` | `../img/keycloak-bg-darken.svg` (Keycloak's own default) |
 
 ## Branding
@@ -70,8 +71,13 @@ fallback when no logo is configured) and the admin console's browser tab
 title.
 
 - `THEME_PRIMARY_COLOR` overrides `--pf-v5-global--primary-color--100`
-  (buttons/links) and `--keycloak-card-top-color` (login card's top accent
-  border) — same CSS variables Keycloak's own theme exposes for this.
+  (buttons, input focus border) and `--keycloak-card-top-color` (login card's
+  top accent border) — same CSS variables Keycloak's own theme exposes for this.
+- `THEME_SECONDARY_COLOR` overrides `--pf-v5-global--link--Color` and
+  `--pf-v5-global--link--Color--hover` (links, underlined on hover) and
+  `--pf-v5-global--primary-color--200` (primary button hover/focus/active).
+  Defaults to `THEME_PRIMARY_COLOR` 25% darker; set it to any CSS color to
+  pick a specific shade.
 - `THEME_BACKGROUND_URL` overrides `--keycloak-bg-logo-url`, used by a
   `.login-pf body` selector that only exists on the **login page**. The
   admin console (a separate React app, `keycloak-admin-ui.jar`) has no such
