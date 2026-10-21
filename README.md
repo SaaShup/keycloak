@@ -75,9 +75,17 @@ title.
   top accent border) — same CSS variables Keycloak's own theme exposes for this.
 - `THEME_SECONDARY_COLOR` overrides `--pf-v5-global--link--Color` and
   `--pf-v5-global--link--Color--hover` (links, underlined on hover) and
-  `--pf-v5-global--primary-color--200` (primary button hover/focus/active).
-  Defaults to `THEME_PRIMARY_COLOR` 25% darker; set it to any CSS color to
-  pick a specific shade.
+  `--pf-v5-global--primary-color--200` (primary button hover/focus/active),
+  plus `--pf-v5-c-form-control--hover--after--BorderBottomColor` (input
+  border on hover, set on `.pf-v5-c-form-control` since PatternFly defines it
+  there rather than on `:root`). Defaults to `THEME_PRIMARY_COLOR` 25%
+  darker; set it to any CSS color to pick a specific shade.
+- PatternFly resets the primary and link colors back to its `--dark` tokens
+  on light components (inputs, alerts, the authenticator list...), so those
+  tokens are overridden too. Same for `--pf-v5-global--active-color--100/400`
+  (password visibility toggle, OTP device tiles) and the checkboxes'
+  `accent-color`. Info alerts keep PatternFly's blue on purpose (it's a status
+  color, like the red of error alerts).
 - `THEME_BACKGROUND_URL` overrides `--keycloak-bg-logo-url`, used by a
   `.login-pf body` selector that only exists on the **login page**. The
   admin console (a separate React app, `keycloak-admin-ui.jar`) has no such

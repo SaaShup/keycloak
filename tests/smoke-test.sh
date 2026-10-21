@@ -91,6 +91,7 @@ check "card top color follows primary" "$(css_var keycloak-card-top-color)" "#0d
 check "secondary color default (primary darkened)" "$(css_var pf-v5-global--primary-color--200)" "color-mix(in srgb, #0d6efd 75%, black)"
 check "link color is secondary" "$(css_var pf-v5-global--link--Color)" "color-mix(in srgb, #0d6efd 75%, black)"
 check "link hover color is secondary" "$(css_var pf-v5-global--link--Color--hover)" "color-mix(in srgb, #0d6efd 75%, black)"
+check "input hover border is secondary" "$(css_var pf-v5-c-form-control--hover--after--BorderBottomColor)" "color-mix(in srgb, #0d6efd 75%, black)"
 
 echo "== Case 2: overrides + identity providers"
 start -e BASE_DOMAIN=example.com -e KEYCLOAK_REALM=other \
@@ -118,6 +119,13 @@ check "card top color follows primary" "$(css_var keycloak-card-top-color)" "#8F
 check "secondary color override (button hover)" "$(css_var pf-v5-global--primary-color--200)" "#5a6419"
 check "link color is secondary" "$(css_var pf-v5-global--link--Color)" "#5a6419"
 check "link hover color is secondary" "$(css_var pf-v5-global--link--Color--hover)" "#5a6419"
+check "input hover border is secondary" "$(css_var pf-v5-c-form-control--hover--after--BorderBottomColor)" "#5a6419"
+check "primary kept inside light components" "$(css_var pf-v5-global--primary-color--dark-100)" "#8F9E29"
+check "links kept inside light components" "$(css_var pf-v5-global--link--Color--dark)" "#5a6419"
+check "link hover kept inside light components" "$(css_var pf-v5-global--link--Color--dark--hover)" "#5a6419"
+check "active indicator is primary" "$(css_var pf-v5-global--active-color--100)" "#8F9E29"
+check "active hover indicator is secondary" "$(css_var pf-v5-global--active-color--400)" "#5a6419"
+check "checkbox accent is primary" "$(grep -oE 'accent-color: [^;]*' <<<"$CSS" | sed 's/^accent-color: //')" "#8F9E29"
 
 echo
 if [[ $FAILED -eq 0 ]]; then echo "All checks passed"; else echo "Some checks failed"; exit 1; fi

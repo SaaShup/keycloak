@@ -3,8 +3,28 @@
   --pf-v5-global--primary-color--200: ${THEME_SECONDARY_COLOR};
   --pf-v5-global--link--Color: ${THEME_SECONDARY_COLOR};
   --pf-v5-global--link--Color--hover: ${THEME_SECONDARY_COLOR};
+  /* PatternFly resets the two above to these "dark" tokens on light components
+     (.pf-v5-c-form-control, .pf-v5-c-alert, .pf-v5-c-data-list...), which would
+     bring back the default blue for input focus borders and links in messages */
+  --pf-v5-global--primary-color--dark-100: ${THEME_PRIMARY_COLOR};
+  --pf-v5-global--link--Color--dark: ${THEME_SECONDARY_COLOR};
+  --pf-v5-global--link--Color--dark--hover: ${THEME_SECONDARY_COLOR};
+  /* active/selected indicators: password visibility toggle border, OTP device
+     tiles, selected authenticator */
+  --pf-v5-global--active-color--100: ${THEME_PRIMARY_COLOR};
+  --pf-v5-global--active-color--400: ${THEME_SECONDARY_COLOR};
   --keycloak-card-top-color: ${THEME_PRIMARY_COLOR};
   --keycloak-bg-logo-url: url('${THEME_BACKGROUND_URL}');
+}
+
+/* set on the component itself by PatternFly, so :root can't override it */
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: ${THEME_SECONDARY_COLOR};
+}
+
+/* native checkboxes (remember me, terms) use the browser's own blue otherwise */
+.pf-v5-c-check__input {
+  accent-color: ${THEME_PRIMARY_COLOR};
 }
 
 ${LOGO_CSS_RULE}
