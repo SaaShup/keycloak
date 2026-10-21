@@ -16,8 +16,14 @@ on:
         type: string
 
 jobs:
+  tests:
+    name: Tests
+    if: startsWith(github.ref, 'refs/tags/v') && !inputs.skip_publish
+    uses: ./.github/workflows/tests.yml
+
   publish:
     name: Push image to GHCR
+    needs: tests
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') && !inputs.skip_publish
     timeout-minutes: 30

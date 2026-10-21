@@ -14,6 +14,7 @@ COPY --chown=1000:0 --chmod=0755 entrypoint.sh /opt/keycloak/paashup/entrypoint.
 COPY --chown=1000:0 realm-template.json /opt/keycloak/paashup/realm-template.json
 COPY --chown=1000:0 brand-template.css /opt/keycloak/paashup/brand-template.css
 COPY --chown=1000:0 admin-theme-template.properties /opt/keycloak/paashup/admin-theme-template.properties
+COPY --chown=1000:0 login-theme-template.properties /opt/keycloak/paashup/login-theme-template.properties
 COPY --chown=1000:0 theme/paashup /opt/keycloak/themes/paashup
 
 RUN mkdir -p \
