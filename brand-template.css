@@ -1,5 +1,8 @@
 :root {
   --pf-v5-global--primary-color--100: ${THEME_PRIMARY_COLOR};
+  --pf-v5-global--primary-color--200: ${THEME_SECONDARY_COLOR};
+  --pf-v5-global--link--Color: ${THEME_SECONDARY_COLOR};
+  --pf-v5-global--link--Color--hover: ${THEME_SECONDARY_COLOR};
   --keycloak-card-top-color: ${THEME_PRIMARY_COLOR};
   --keycloak-bg-logo-url: url('${THEME_BACKGROUND_URL}');
 }
