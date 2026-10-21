@@ -9,7 +9,7 @@ Custom Keycloak image for Paashups, preconfigured with realms, clients and theme
   `kc.sh start --import-realm`. Keycloak's realm import is idempotent
   (existing realms are left alone), so this is safe to run on every restart.
 - The realm import creates: the `paashup` realm, the `SaasHup-Admins` group,
-  a seed user in that group, the `grafana` and `saashup` OIDC clients (with
+  a seed user in that group, the `grafana`, `saashup` and `paasbox` OIDC clients (with
   their secrets, redirect URIs and protocol mappers), and, if credentials are
   supplied, the `google`/`github` identity providers.
 - A `paashup` login theme and a `paashup` admin console theme (both extend
@@ -49,6 +49,12 @@ Used to render the realm import (all optional, sensible defaults shown):
 | `SAASHUP_OIDC_CLIENT_SECRET` | *(empty)* |
 | `SAASHUP_OIDC_REDIRECT_PATH` | `/oidc/callback` |
 | `SAASHUP_OIDC_REDIRECT_URI` | `https://${BASE_DOMAIN}${SAASHUP_OIDC_REDIRECT_PATH}` |
+| `GRAFANA_POST_LOGOUT_REDIRECT_URIS` | `https://${BASE_DOMAIN}/dashboard##https://${BASE_DOMAIN}/dashboard/*` |
+| `SAASHUP_POST_LOGOUT_REDIRECT_URIS` | `https://${BASE_DOMAIN}/*` |
+| `PAASBOX_OIDC_CLIENT_ID` | `paasbox` |
+| `PAASBOX_OIDC_CLIENT_SECRET` | *(empty — generated)* |
+| `PAASBOX_OIDC_REDIRECT_URI` | `https://${BASE_DOMAIN}/datacenter/*` |
+| `PAASBOX_POST_LOGOUT_REDIRECT_URIS` | `https://${BASE_DOMAIN}/datacenter/*` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | *(empty — IdP skipped if unset)* |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty — IdP skipped if unset)* |
 | `KEYCLOAK_APP_NAME` | `SaaShup` |
@@ -82,6 +88,12 @@ SaaShup logo (`theme/paashup/login/resources/img/saashup-logo.svg`) and
 background (`theme/paashup/login/resources/img/saashup-bg.svg`) are baked
 into the image and used unless overridden.
 
+The rendered CSS is written as `brand-<content hash>.css` (and referenced from
+both themes' `theme.properties`), so its URL changes whenever a branding env
+var changes. Keycloak's theme resource URLs otherwise stay the same across
+restarts, and both its on-disk gzip cache and a CDN in front (Cloudflare,
+30-day `max-age`) would keep serving the old file — no manual purge needed.
+
 ## Local test
 
 ```bash
@@ -93,3 +105,12 @@ docker run -d --name kc-test -p 18080:8080 \
   -e SAASHUP_OIDC_CLIENT_SECRET=saashupsecret \
   keycloak:test
 ```
+
+## Tests
+
+- `tests/smoke-test.sh` — builds the image, starts it with a few env var
+  combinations and checks the imported realm through the admin API.
+- `tests/e2e/run.sh` — docker compose with Keycloak + Grafana + SaaShup behind
+  traefik on `http://app.test`, then Playwright (run from its Docker image) logs
+  in and out of both apps through Keycloak. Override `SAASHUP_IMAGE` /
+  `GRAFANA_IMAGE` / `KEYCLOAK_IMAGE` to test other versions.

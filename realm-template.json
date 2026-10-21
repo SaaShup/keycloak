@@ -32,6 +32,7 @@
       "directAccessGrantsEnabled": false,
       "secret": "${GRAFANA_OIDC_CLIENT_SECRET}",
       "redirectUris": [ "${GRAFANA_OIDC_REDIRECT_URI}" ],
+      "attributes": { "post.logout.redirect.uris": "${GRAFANA_POST_LOGOUT_REDIRECT_URIS}" },
       "webOrigins": [ "${WEB_ORIGIN}" ],
       "protocolMappers": [
         {
@@ -57,6 +58,7 @@
       "directAccessGrantsEnabled": false,
       "secret": "${SAASHUP_OIDC_CLIENT_SECRET}",
       "redirectUris": [ "${SAASHUP_OIDC_REDIRECT_URI}" ],
+      "attributes": { "post.logout.redirect.uris": "${SAASHUP_POST_LOGOUT_REDIRECT_URIS}" },
       "webOrigins": [ "${WEB_ORIGIN}" ],
       "protocolMappers": [
         {
@@ -68,6 +70,43 @@
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
+        }
+      ]
+    },
+    {
+      "clientId": "${PAASBOX_OIDC_CLIENT_ID}",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "secret": "${PAASBOX_OIDC_CLIENT_SECRET}",
+      "redirectUris": [ "${PAASBOX_OIDC_REDIRECT_URI}" ],
+      "attributes": { "post.logout.redirect.uris": "${PAASBOX_POST_LOGOUT_REDIRECT_URIS}" },
+      "webOrigins": [ "${WEB_ORIGIN}" ]
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "first broker login auto-link",
+      "description": "Create the user if unique, otherwise link silently to the existing account",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-create-user-if-unique",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        },
+        {
+          "authenticator": "idp-auto-link",
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
         }
       ]
     }

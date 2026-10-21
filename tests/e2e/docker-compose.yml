@@ -1,0 +1,91 @@
+# Everything is served from http://app.test (same origin for the browser and
+# for the containers) so issuer URLs are identical on both sides:
+#   /auth -> keycloak, /dashboard -> grafana, / -> saashup
+name: kc-e2e
+
+x-base: &base
+  BASE_DOMAIN: app.test
+  KEYCLOAK_REALM: paashup
+
+services:
+  proxy:
+    image: ${TRAEFIK_IMAGE:-saashup/traefik:latest}
+    # the image ships /traefik.yml, found via an unset $XDG_CONFIG_HOME (-> "/"),
+    # and a config file wins over the flags below
+    environment:
+      XDG_CONFIG_HOME: /tmp
+    working_dir: /tmp
+    command:
+      - --entrypoints.http.address=:80
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=kc-e2e_default
+      # only this stack: other traefik-labelled containers on the host would clash
+      - --providers.docker.constraints=Label(`com.docker.compose.project`,`kc-e2e`)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${E2E_PORT:-18088}:80"
+    networks:
+      default:
+        aliases: [app.test]
+    depends_on: [keycloak, grafana, saashup]
+
+  keycloak:
+    # built from the Dockerfile at the repo root
+    build:
+      context: ../..
+    image: ${KEYCLOAK_IMAGE:-saashup-keycloak:test}
+    # the images ship https labels (traefik terminates TLS in prod): override for plain http
+    labels:
+      traefik.docker.network: kc-e2e_default
+      traefik.http.routers.keycloak.rule: PathPrefix(`/auth`)
+      traefik.http.middlewares.force-https-header.headers.customrequestheaders.X-Forwarded-Proto: http
+      traefik.http.middlewares.force-https-header.headers.customrequestheaders.X-Forwarded-Port: "80"
+    environment:
+      BASE_DOMAIN: app.test
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin-pw
+      GRAFANA_OIDC_CLIENT_SECRET: grafana-secret
+      SAASHUP_OIDC_CLIENT_SECRET: saashup-secret
+      # the e2e stack runs over plain http
+      GRAFANA_OIDC_REDIRECT_URI: http://app.test/dashboard/login/generic_oauth
+      SAASHUP_OIDC_REDIRECT_URI: http://app.test/oidc/callback
+      WEB_ORIGIN: http://app.test
+      GRAFANA_POST_LOGOUT_REDIRECT_URIS: http://app.test/dashboard##http://app.test/dashboard/*
+      SAASHUP_POST_LOGOUT_REDIRECT_URIS: http://app.test/*
+      KEYCLOAK_SEED_USERNAME: saashup
+      KEYCLOAK_SEED_PASSWORD: saashup
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-ghcr.io/saashup/grafana:latest}
+    # the images ship https labels (traefik terminates TLS in prod): override for plain http
+    labels:
+      traefik.docker.network: kc-e2e_default
+      traefik.http.routers.grafana.rule: PathPrefix(`/dashboard`)
+      traefik.http.middlewares.force-https-header.headers.customrequestheaders.X-Forwarded-Proto: http
+      traefik.http.middlewares.force-https-header.headers.customrequestheaders.X-Forwarded-Port: "80"
+    environment:
+      # the image derives root url and keycloak endpoints from these
+      BASE_DOMAIN: app.test
+      BASE_SCHEME: http
+      GF_SECURITY_ADMIN_PASSWORD: admin-pw
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: grafana-secret
+      GF_AUTH_SIGNOUT_REDIRECT_URL: http://app.test/auth/realms/paashup/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=http%3A%2F%2Fapp.test%2Fdashboard%2Flogin
+
+  saashup:
+    image: ${SAASHUP_IMAGE:-saashup/netbox-docker-image-upgrade:latest}
+    # the images ship https labels (traefik terminates TLS in prod): override for plain http
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.saashup.entrypoints: http
+      traefik.http.routers.saashup.rule: PathPrefix(`/`)
+      traefik.http.routers.saashup.priority: "1"
+      traefik.http.services.saashup.loadbalancer.server.port: "1880"
+    environment:
+      OIDC_ENABLED: "true"
+      OIDC_ISSUER_URL: http://app.test/auth/realms/paashup
+      OIDC_CLIENT_ID: saashup
+      OIDC_CLIENT_SECRET: saashup-secret
+      OIDC_REDIRECT_URI: http://app.test/oidc/callback
+      SESSION_SECRET: e2e-session-secret-e2e-session-secret
+      ADMIN_ALLOWED_EMAILS: contact@saashup.com

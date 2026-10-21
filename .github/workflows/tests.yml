@@ -1,0 +1,49 @@
+name: Tests
+
+# Every branch push (PR branches included, so no separate pull_request trigger
+# to avoid running twice). Tags are covered by docker-publish.yml, which calls
+# this workflow before publishing.
+on:
+  push:
+    branches:
+      - "**"
+  workflow_call:
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run smoke test
+        run: tests/smoke-test.sh
+
+  e2e:
+    name: E2E test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run e2e test
+        run: tests/e2e/run.sh
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

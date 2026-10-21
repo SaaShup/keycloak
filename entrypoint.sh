@@ -17,6 +17,12 @@ IMPORT_DIR="/opt/keycloak/data/import"
 : "${SAASHUP_OIDC_CLIENT_SECRET:=}"
 : "${SAASHUP_OIDC_REDIRECT_PATH:=/oidc/callback}"
 : "${SAASHUP_OIDC_REDIRECT_URI:=https://${BASE_DOMAIN}${SAASHUP_OIDC_REDIRECT_PATH}}"
+: "${PAASBOX_OIDC_CLIENT_ID:=paasbox}"
+: "${PAASBOX_OIDC_CLIENT_SECRET:=}"
+: "${PAASBOX_OIDC_REDIRECT_URI:=https://${BASE_DOMAIN}/datacenter/*}"
+: "${PAASBOX_POST_LOGOUT_REDIRECT_URIS:=https://${BASE_DOMAIN}/datacenter/*}"
+: "${GRAFANA_POST_LOGOUT_REDIRECT_URIS:=https://${BASE_DOMAIN}/dashboard##https://${BASE_DOMAIN}/dashboard/*}"
+: "${SAASHUP_POST_LOGOUT_REDIRECT_URIS:=https://${BASE_DOMAIN}/*}"
 : "${WEB_ORIGIN:=https://${BASE_DOMAIN}}"
 
 : "${KEYCLOAK_APP_NAME:=SaaShup}"
@@ -25,6 +31,22 @@ IMPORT_DIR="/opt/keycloak/data/import"
 : "${THEME_BACKGROUND_URL:=../img/keycloak-bg-darken.svg}"
 : "${THEME_LOGO_WIDTH:=220px}"
 : "${THEME_LOGO_HEIGHT:=80px}"
+
+generate_secret() {
+  head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32
+}
+
+if [[ -z "$GRAFANA_OIDC_CLIENT_SECRET" ]]; then
+  GRAFANA_OIDC_CLIENT_SECRET="$(generate_secret)"
+fi
+
+if [[ -z "$SAASHUP_OIDC_CLIENT_SECRET" ]]; then
+  SAASHUP_OIDC_CLIENT_SECRET="$(generate_secret)"
+fi
+
+if [[ -z "$PAASBOX_OIDC_CLIENT_SECRET" ]]; then
+  PAASBOX_OIDC_CLIENT_SECRET="$(generate_secret)"
+fi
 
 mime_type_for() {
   case "$1" in
@@ -72,7 +94,7 @@ sed_escape() {
 
 identity_provider_json() {
   local alias="$1" provider_id="$2" client_id="$3" client_secret="$4"
-  printf '{"alias":"%s","providerId":"%s","enabled":true,"trustEmail":true,"config":{"clientId":"%s","clientSecret":"%s","useJwksUrl":"true"}}' \
+  printf '{"alias":"%s","providerId":"%s","enabled":true,"trustEmail":true,"firstBrokerLoginFlowAlias":"first broker login auto-link","config":{"clientId":"%s","clientSecret":"%s","useJwksUrl":"true"}}' \
     "$alias" "$provider_id" "$client_id" "$client_secret"
 }
 
@@ -104,6 +126,12 @@ sed \
   -e "s|\${SAASHUP_OIDC_CLIENT_ID}|$(sed_escape "$SAASHUP_OIDC_CLIENT_ID")|g" \
   -e "s|\${SAASHUP_OIDC_CLIENT_SECRET}|$(sed_escape "$SAASHUP_OIDC_CLIENT_SECRET")|g" \
   -e "s|\${SAASHUP_OIDC_REDIRECT_URI}|$(sed_escape "$SAASHUP_OIDC_REDIRECT_URI")|g" \
+  -e "s|\${GRAFANA_POST_LOGOUT_REDIRECT_URIS}|$(sed_escape "$GRAFANA_POST_LOGOUT_REDIRECT_URIS")|g" \
+  -e "s|\${SAASHUP_POST_LOGOUT_REDIRECT_URIS}|$(sed_escape "$SAASHUP_POST_LOGOUT_REDIRECT_URIS")|g" \
+  -e "s|\${PAASBOX_OIDC_CLIENT_ID}|$(sed_escape "$PAASBOX_OIDC_CLIENT_ID")|g" \
+  -e "s|\${PAASBOX_OIDC_CLIENT_SECRET}|$(sed_escape "$PAASBOX_OIDC_CLIENT_SECRET")|g" \
+  -e "s|\${PAASBOX_OIDC_REDIRECT_URI}|$(sed_escape "$PAASBOX_OIDC_REDIRECT_URI")|g" \
+  -e "s|\${PAASBOX_POST_LOGOUT_REDIRECT_URIS}|$(sed_escape "$PAASBOX_POST_LOGOUT_REDIRECT_URIS")|g" \
   -e "s|\${WEB_ORIGIN}|$(sed_escape "$WEB_ORIGIN")|g" \
   -e "s|\${IDENTITY_PROVIDERS_JSON}|$(sed_escape "$IDENTITY_PROVIDERS_JSON")|g" \
   -e "s|\${KEYCLOAK_APP_NAME}|$(sed_escape "$KEYCLOAK_APP_NAME")|g" \
@@ -117,14 +145,21 @@ sed \
   -e "s|\${LOGO_CSS_RULE}|$(sed_escape "$LOGO_CSS_RULE")|g" \
   /opt/keycloak/paashup/brand-template.css > "$BRAND_CSS"
 
-mkdir -p /opt/keycloak/themes/paashup/login/resources/css
-cp "$BRAND_CSS" /opt/keycloak/themes/paashup/login/resources/css/brand.css
+# Content hash in the file name: theme resource URLs (/resources/<kc version>/...)
+# never change across restarts, so Keycloak's on-disk gzip cache and any CDN in
+# front (Cloudflare) would keep serving a stale brand.css otherwise.
+BRAND_CSS_FILE="brand-$(sha256sum "$BRAND_CSS" | head -c 12).css"
 
-mkdir -p /opt/keycloak/themes/paashup/admin/resources/css
-cp "$BRAND_CSS" /opt/keycloak/themes/paashup/admin/resources/css/brand.css
-sed \
-  -e "s|\${KEYCLOAK_APP_NAME}|$(sed_escape "$KEYCLOAK_APP_NAME")|g" \
-  -e "s|\${WEB_ORIGIN}|$(sed_escape "$WEB_ORIGIN")|g" \
-  /opt/keycloak/paashup/admin-theme-template.properties > /opt/keycloak/themes/paashup/admin/theme.properties
+for theme in login admin; do
+  css_dir="/opt/keycloak/themes/paashup/${theme}/resources/css"
+  mkdir -p "$css_dir"
+  rm -f "$css_dir"/brand*.css
+  cp "$BRAND_CSS" "${css_dir}/${BRAND_CSS_FILE}"
+  sed \
+    -e "s|\${BRAND_CSS_FILE}|$(sed_escape "$BRAND_CSS_FILE")|g" \
+    -e "s|\${KEYCLOAK_APP_NAME}|$(sed_escape "$KEYCLOAK_APP_NAME")|g" \
+    -e "s|\${WEB_ORIGIN}|$(sed_escape "$WEB_ORIGIN")|g" \
+    "/opt/keycloak/paashup/${theme}-theme-template.properties" > "/opt/keycloak/themes/paashup/${theme}/theme.properties"
+done
 
 exec /opt/keycloak/bin/kc.sh "$@" --import-realm
