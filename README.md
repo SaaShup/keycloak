@@ -9,7 +9,8 @@ Custom Keycloak image for Paashups, preconfigured with realms, clients and theme
   `kc.sh start --import-realm`. Keycloak's realm import is idempotent
   (existing realms are left alone), so this is safe to run on every restart.
 - The realm import creates: the `paashup` realm, the `SaasHup-Admins` group,
-  a seed user in that group, the `grafana`, `saashup` and `paasbox` OIDC clients (with
+  a seed user in that group, the `paasbox-write` realm role and the
+  `PaaSBox-Writers` group mapped to it, the `grafana`, `saashup` and `paasbox` OIDC clients (with
   their secrets, redirect URIs and protocol mappers), and, if credentials are
   supplied, the `google`/`github` identity providers.
 - A `paashup` login theme and a `paashup` admin console theme (both extend
