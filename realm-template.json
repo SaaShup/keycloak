@@ -5,8 +5,14 @@
   "displayNameHtml": "${DISPLAY_NAME_HTML}",
   "loginTheme": "paashup",
   "adminTheme": "paashup",
+  "roles": {
+    "realm": [
+      { "name": "paasbox-write", "description": "Write access to PaaSBox" }
+    ]
+  },
   "groups": [
-    { "name": "${KEYCLOAK_ADMIN_GROUP}" }
+    { "name": "${KEYCLOAK_ADMIN_GROUP}" },
+    { "name": "PaaSBox-Writers", "realmRoles": [ "paasbox-write" ] }
   ],
   "users": [
     {
