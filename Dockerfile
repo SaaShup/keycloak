@@ -1,4 +1,4 @@
-FROM keycloak/keycloak:26.6 AS builder
+FROM keycloak/keycloak:26.7 AS builder
 
 ENV KC_DB=dev-file
 ENV KC_HEALTH_ENABLED=true
@@ -7,7 +7,7 @@ ENV KC_HTTP_RELATIVE_PATH=/auth
 
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM keycloak/keycloak:26.6
+FROM keycloak/keycloak:26.7
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --chown=1000:0 --chmod=0755 entrypoint.sh /opt/keycloak/paashup/entrypoint.sh
